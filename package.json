@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "echo Preparing Android app"
+    "build": "npx cap sync android"
   },
   "dependencies": {
     "@capacitor/core": "7.4.3",
