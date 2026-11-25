@@ -26,6 +26,71 @@ jobs:
       - name: Create Android project
         run: npx cap add android
 
+      - name: Add native Android printing plugin
+        shell: bash
+        run: |
+          mkdir -p android/app/src/main/java/com/yaman/hmd
+          cat > android/app/src/main/java/com/yaman/hmd/NativePrintPlugin.java <<'JAVA'
+          package com.yaman.hmd;
+
+          import android.content.Context;
+          import android.print.PrintAttributes;
+          import android.print.PrintManager;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+          import android.os.Handler;
+          import android.os.Looper;
+          import com.getcapacitor.Plugin;
+          import com.getcapacitor.PluginCall;
+          import com.getcapacitor.PluginMethod;
+          import com.getcapacitor.annotation.CapacitorPlugin;
+
+          @CapacitorPlugin(name = "NativePrint")
+          public class NativePrintPlugin extends Plugin {
+              @PluginMethod
+              public void print(PluginCall call) {
+                  String html = call.getString("html");
+                  String jobName = call.getString("jobName", "Yaman HMD - Facture");
+                  if (html == null || html.trim().isEmpty()) {
+                      call.reject("Le contenu à imprimer est vide.");
+                      return;
+                  }
+                  new Handler(Looper.getMainLooper()).post(() -> {
+                      try {
+                          Context context = getContext();
+                          PrintManager printManager = (PrintManager) context.getSystemService(Context.PRINT_SERVICE);
+                          WebView webView = new WebView(context);
+                          webView.getSettings().setJavaScriptEnabled(true);
+                          webView.setWebViewClient(new WebViewClient() {
+                              @Override
+                              public void onPageFinished(WebView view, String url) {
+                                  PrintAttributes attributes = new PrintAttributes.Builder()
+                                      .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+                                      .setColorMode(PrintAttributes.COLOR_MODE_COLOR)
+                                      .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
+                                      .build();
+                                  printManager.print(jobName, view.createPrintDocumentAdapter(jobName), attributes);
+                                  call.resolve();
+                              }
+                          });
+                          webView.loadDataWithBaseURL(null, html, "text/HTML", "UTF-8", null);
+                      } catch (Exception e) {
+                          call.reject("Impossible de démarrer l'impression.", e);
+                      }
+                  });
+              }
+          }
+          JAVA
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('android/app/src/main/java/com/yaman/hmd/MainActivity.java')
+          s = p.read_text()
+          if 'NativePrintPlugin' not in s:
+              s = s.replace('import com.getcapacitor.BridgeActivity;', 'import com.getcapacitor.BridgeActivity;\nimport com.yaman.hmd.NativePrintPlugin;')
+              s = s.replace('public class MainActivity extends BridgeActivity {', 'public class MainActivity extends BridgeActivity {\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(NativePrintPlugin.class);\n        super.onCreate(savedInstanceState);\n    }')
+              p.write_text(s)
+          PY
+
       - name: Sync Android
         run: npx cap sync android
 
