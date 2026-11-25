@@ -1,0 +1,15 @@
+{
+  "name": "yaman-hmd",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "echo Preparing Android app"
+  },
+  "dependencies": {
+    "@capacitor/core": "7.4.3",
+    "@capacitor/android": "7.4.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "7.4.3"
+  }
+}
