@@ -1202,7 +1202,13 @@
                 ? window.Capacitor.Plugins.NativePrint : null;
             if (nativePrint && typeof nativePrint.print === 'function') {
                 try {
-                    const html = '<!DOCTYPE html>' + document.documentElement.outerHTML;
+                    const styles = Array.from(document.querySelectorAll('style'))
+                        .map(style => style.innerHTML).join('\n');
+                    const html = '<!DOCTYPE html><html><head><meta charset=\"UTF-8\">' +
+                        '<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">' +
+                        '<title>Facture Yaman HMD</title><style>' + styles +
+                        '@page{size:A4;margin:10mm} html,body{background:#fff!important;padding:0!important;margin:0!important}' +
+                        '</style></head><body>' + invoice.outerHTML + '</body></html>';
                     await nativePrint.print({ html: html, jobName: 'Facture Yaman HMD' });
                 } catch (error) {
                     alert('تعذرت الطباعة. حاول مرة أخرى.');
