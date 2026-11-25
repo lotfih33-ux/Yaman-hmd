@@ -1,1 +1,7 @@
 
+{
+  "appId": "com.yaman.hmd",
+  "appName": "Yaman HMD",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
